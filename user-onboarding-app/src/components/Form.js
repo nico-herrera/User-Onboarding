@@ -11,13 +11,14 @@ const Form = () => {
     name: "",
     email: "",
     password: "",
-    checked: false,
+    terms: false,
   });
 
   const [errors, setErrors] = useState({
     name: "",
     email: "",
     password: "",
+    terms: "",
   });
 
   const [users, setUsers] = useState([]);
@@ -31,28 +32,33 @@ const Form = () => {
     });
   }, [form]);
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-
-    Yup.reach(userSchema, name)
-      .validate(value)
+  const handleChange = (e) => {
+    e.persist();
+    Yup.reach(userSchema, e.target.name)
+      .validate(
+        e.target.type === "checkbox" ? e.target.checked : e.target.value
+      )
       .then((valid) => {
         setErrors({
           ...errors,
-          [name]: "",
+          [e.target.name]: "",
         });
       })
       .catch((err) => {
         setErrors({
           ...errors,
-          [name]: err.errors[0],
+          [e.target.name]: err.errors[0],
         });
       });
+    console.log(e.target.value);
 
-    setForm({
+    const newFormState = {
       ...form,
-      [name]: value,
-    });
+      [e.target.name]:
+        e.target.type === "checkbox" ? e.target.checked : e.target.value,
+    };
+
+    setForm(newFormState);
   };
 
   const submitForm = async (event) => {
@@ -75,6 +81,7 @@ const Form = () => {
         const resp = await axios.post("https://reqres.in/api/users", user);
         // window.location = "/retrieve";
         setUsers(resp.data);
+        // setErrors(null);
         console.log(users);
         console.log(resp.data);
       } catch (err) {
@@ -96,6 +103,7 @@ const Form = () => {
           name="name"
           value={form.name}
           onChange={handleChange}
+          data-cy="name"
         />
         {errors.name.length > 0 && <p className="error">{errors.name}</p>}
         <br />
@@ -107,6 +115,7 @@ const Form = () => {
           name="email"
           value={form.email}
           onChange={handleChange}
+          data-cy="email"
         />
         {errors.email.length > 0 && <p className="error">{errors.email}</p>}
         <br />
@@ -118,6 +127,7 @@ const Form = () => {
           name="password"
           value={form.password}
           onChange={handleChange}
+          data-cy="password"
         />
         {errors.password.length > 0 && (
           <p className="error">{errors.password}</p>
@@ -127,11 +137,13 @@ const Form = () => {
         <input
           type="checkbox"
           id="checkbox"
-          value={form.checked}
+          name="terms"
+          checked={form.terms}
           onChange={handleChange}
+          data-cy="checkbox"
         />
         <br />
-        <button type="submit" disabled={buttonDisabled}>
+        <button type="submit" disabled={buttonDisabled} data-cy="submit-button">
           Submit
         </button>
       </form>
